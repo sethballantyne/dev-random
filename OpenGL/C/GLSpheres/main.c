@@ -29,9 +29,6 @@
 #include "list.h"
 #include "main.h"
 
-// nucleus angle of revolution
-GLfloat electron = 0.0f;
-
 sphere_t nucleus;
 
 // ever heard of an array? :P
