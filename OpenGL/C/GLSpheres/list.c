@@ -19,6 +19,11 @@
 *THE SOFTWARE.
 */
 
+//----------------------------------------------------------------
+// Modified and extended version of the linked list
+// presented in Kyle Loudon's book "Mastering Algorithms with C".
+//----------------------------------------------------------------
+
 #include <stdarg.h>
 #include <string.h>
 #include "list.h"
@@ -99,7 +104,6 @@ int List_AddItem(list_t *list, element_t *element, void *data)
 	if(NULL == element)
 	{
 		if(list->size == 0)
-		//if(LIST_SIZE(list) == 0)
 		{
 			list->tail = new_element;
 		}
@@ -128,7 +132,6 @@ int List_RemoveItem(list_t *list, element_t *element, void **data)
 	element_t *old_element;
 
 	if(0 == list->size)
-	//if(LIST_SIZE(list) == 0)
 	{
 		return -1;
 	}

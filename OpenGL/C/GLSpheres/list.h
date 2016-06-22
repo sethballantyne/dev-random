@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 
-/* Represents an individual node within the linked list */
+// Represents an individual node within the linked list
 typedef struct element_
 {
 	void *data;
@@ -37,39 +37,30 @@ typedef struct
 	int size;
 
 	//
-	int (*match)(const void *key1, const void *key2);
+	//int (*match)(const void *key1, const void *key2);
 
-	//
+	// called when List_Destroy(...) is executed
 	void (*destroy)(void *data);
 
-	//
+	// first item in the list
 	element_t *head;
 
-	//
+	// last item in the list
 	element_t *tail;
 } list_t;
 
-//
+// Initialises the specified instance of list_t with default values.
 void List_Create(list_t *list, void(*destroy)(void *data));
 
-//
+// Destroys all items in the list, before calling the function
+// assigned the lists destroy function pointer. 
 void List_Destroy(list_t *list);
 
-//
+// Places the item at the start of the list
 int List_AddItem(list_t *list, element_t *element, void *data);
 
-//
+// Places the item at the end of the list
 int List_AppendItem(list_t *list, element_t *element,  void *data);
 
-//
+// Removes the specified item from the list
 int List_RemoveItem(list_t *list, element_t *element, void **data);
-
-//#define LIST_SIZE(list) ((list)->size)
-//#define LIST_HEAD(list) ((list)->head)
-//#define LIST_TAIL(list) ((list)->tail)
-//#define LIST_IS_HEAD(list, element) ((element) == (list)->head ? 1 : 0)
-//#define LIST_IS_TAIL(element) ((element)->next == NULL ? 1 : 0)
-//#define LIST_DATA(element) ((element)->data)
-//#define LIST_NEXT(element) ((element)->next)
-
-
