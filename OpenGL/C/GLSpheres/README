@@ -1,0 +1,6 @@
+Builds under MSVC, should work with GCC also. You'll also be needing glut:
+
+http://freeglut.sourceforge.net/  (technically that's a glut replacement, but whatever)
+
+The code used in both the link list and the GL code is based on demo code taken from books and then modified and extended. 
+Credit goes to the original authors. 
