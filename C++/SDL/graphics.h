@@ -44,8 +44,8 @@ inline Uint32 Graphics_GetPixel(SDL_Surface *surface, int x, int y)
 inline void Graphics_DrawPixel(SDL_Surface *surface, int x, int y, Uint32 colour)
 {
     // crashes without this
-    if(y >= surface->h)
-        return;
+    /*if(y >= surface->h)
+        return;*/
 
     Uint8 *pixel = (Uint8 *)surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel;
 

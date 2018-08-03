@@ -4,6 +4,38 @@
 #include "graphics.h"
 #include "math.h"
 
+#define TICK_INTERVAL    30
+
+static Uint32 next_time;
+
+Uint32 time_left(void)
+{
+    Uint32 now;
+
+    now = SDL_GetTicks();
+    if(next_time <= now)
+        return 0;
+    else
+        return next_time - now;
+}
+
+float GetFPS()
+{
+    static float alpha = 0.2f;  // Change at will. Lower means smoother, but higher values respond faster.
+    
+    static Uint32 frametimelast;
+    static float frametime = 0.0f;
+
+    Uint32 getticks = SDL_GetTicks();
+    Uint32 frametimedelta = getticks - frametimelast;
+    frametimelast = getticks;
+
+    // This is the important part:
+    frametime = alpha * frametimedelta + (1.0f - alpha) * frametime;
+
+    return 1000.0f / frametime;
+}
+
 int main(int argc, char *argv[])
 {
     Math_BuildLookupTables();
@@ -60,12 +92,12 @@ int main(int argc, char *argv[])
             asteroids[curr_index].vertexList[index] = asteroid_vertices[index];
         int scale = rand() % 5;
 
-        Graphics_ScalePolygon2D(&asteroids[curr_index], 0.35, 0.35);
+        Graphics_ScalePolygon2D(&asteroids[curr_index], 0.35f, 0.35f);
 
     } // end for curr_index
     while(!quit)
     {
-
+        next_time = SDL_GetTicks() + TICK_INTERVAL;
         while(SDL_PollEvent(&event))
         {
             switch(event.type)
@@ -78,11 +110,11 @@ int main(int argc, char *argv[])
                             break;
 
                         case SDLK_UP:
-                            Graphics_ScalePolygon2D(&asteroids[0], 1.1, 1.1);
+                            Graphics_ScalePolygon2D(&asteroids[0], 1.1f, 1.1f);
                             break;
 
                         case SDLK_DOWN:
-                            Graphics_ScalePolygon2D(&asteroids[0], 0.9, 0.9);
+                            Graphics_ScalePolygon2D(&asteroids[0], 0.9f, 0.9f);
                             break;
 
                         case SDLK_LEFT:
@@ -106,7 +138,7 @@ int main(int argc, char *argv[])
         // convert the image to the format used by the display.
         // this is done after the colour key is set because colour key blits
         // can sometimes be optimized for a particular display. 
-        SDL_Delay(30);
+        //SDL_Delay(30);
         Graphics_RotatePolygon2D(&asteroids[0], -2);
         if(SDL_MUSTLOCK(screen))
         {
@@ -130,6 +162,10 @@ int main(int argc, char *argv[])
         Graphics_RenderSurface(screen,asteroidSurface, 0, 0);
         // swap the back buffer to the screen.
         SDL_Flip(screen);
+        printf("%f\n", GetFPS());
+
+        SDL_Delay(time_left());
+        next_time += TICK_INTERVAL;
     }
 
     // values will be different if 16bit screen resolution is used.
