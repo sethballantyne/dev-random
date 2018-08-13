@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include <string>
+#include "math.h"
 
 struct VERTEX2DF
 {
@@ -18,6 +19,123 @@ struct POLYGON2D
     int yVelocity = 0;    // initial velocity
     Uint32 colour = 0;      // could be index or PALETTENTRY
     VERTEX2DF *vertexList = nullptr; // pointer to vertex list
+};
+
+#define POLYGON4DV1_ATTR_TWOSIDED           0x0001
+#define POLYGON4DV1_ATTR_TRANSPARENT        0x0002
+#define POLYGON4DV1_ATTR_8BITCOLOUR         0x0004
+#define POLYGON4DV1_ATTR_RGB16              0x0008
+#define POLYGON4DV1_ATTR_RGB24              0x0010
+
+#define POLYGON4DV1_ATTR_SHADE_MODE_PURE       0x0020
+#define POLYGON4DV1_ATTR_SHADE_MODE_CONSTANT   0x0020 // (alias)
+#define POLYGON4DV1_ATTR_SHADE_MODE_FLAT       0x0040
+#define POLYGON4DV1_ATTR_SHADE_MODE_GOURAUD    0x0080
+#define POLYGON4DV1_ATTR_SHADE_MODE_PHONG      0x0100
+#define POLYGON4DV1_ATTR_SHADE_MODE_FASTPHONG  0x0100 // (alias)
+#define POLYGON4DV1_ATTR_SHADE_MODE_TEXTURE    0x0200 
+
+// states of polygons and faces
+#define POLYGON4DV1_STATE_ACTIVE             0x0001
+#define POLYGON4DV1_STATE_CLIPPED            0x0002
+#define POLYGON4DV1_STATE_BACKFACE           0x0004
+struct POLYGON4DV1
+{
+    // polygon state information
+    int state;
+
+    // physical attributes of the polygon
+    int attributes;
+
+    // the colour of the polygon
+    int colour;
+
+    // list of vertices that make up the polygon.
+    POINT4D* vertexList;
+
+    // indices for use with vertexList
+    int vertices[3];
+};
+
+struct POLYGONF4DV1
+{
+    // state information
+    int state;
+
+    // physical attributes of the polygon
+    int attributes;
+
+    // colour of the polygon
+    int colour;
+
+    // the triangles vertices
+    POINT4D vertexList[3];
+
+    // the vertices after they've been transformed
+    POINT4D transformedVertexList[3];
+
+    // pointer to the next polygon in the list
+    POLYGONF4DV1* next;
+
+    // pointer to the previous polygon in the list
+    POLYGONF4DV1* previous;
+};
+
+// defines for objects version 1
+#define OBJECT4DV1_MAX_VERTICES           1024  // 64
+#define OBJECT4DV1_MAX_POLYS              1024 // 128
+
+// states for objects
+#define OBJECT4DV1_STATE_ACTIVE           0x0001
+#define OBJECT4DV1_STATE_VISIBLE          0x0002 
+#define OBJECT4DV1_STATE_CULLED           0x0004
+
+// an object based on a vertex list and a list of polygons
+struct OBJECT4DV1
+{
+    // objects numeric ID
+    int id;
+
+    // ASCII name of the object
+    char name[64];
+
+    // object state
+    int state;
+
+    // objects attributes
+    int attributes;
+
+    // the objects average radius; used for collision detection.
+    float averageRadius;
+
+    // the objects maximum radius.
+    float maximumRadius;
+
+    // the objects position within the world
+    POINT4D worldPosition;
+
+    // rotation angle of the object in local coordinates.
+    VECTOR4D direction;
+
+    // local axes to track full orientation of the object
+    VECTOR4D ux;
+    VECTOR4D uy;
+    VECTOR4D uz;
+
+    // the number of vertices the object has
+    int numVertices;
+
+    // the objects local vertices
+    POINT4D vlistLocalVertices[OBJECT4DV1_MAX_VERTICES];
+
+    // the objects transformed vertices
+    POINT4D vlistTransformedVertices[OBJECT4DV1_MAX_VERTICES];
+
+    // the number of polygons in the objects mesh.
+    int numPolygons;
+
+    // the objects polygons.
+    POLYGON4DV1 plist[OBJECT4DV1_MAX_POLYS];
 };
 
 // returns the pixel colour at the specified coordinate

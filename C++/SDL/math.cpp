@@ -1630,3 +1630,157 @@ int Intersect_Parm_Line3D_Plane3D(PARMLINE3D* pline, PLANE3D* plane, float *t, P
         return(PARM_LINE_INTERSECT_OUT_SEGMENT);
 
 }
+
+void Build_XYZ_Rotation_MATRIX4X4(float theta_x, float theta_y, float theta_z, MATRIX4X4* mrot)
+{
+    MATRIX4X4 mx;
+    MATRIX4X4 my;
+    MATRIX4X4 mz;
+    MATRIX4X4 tempMatrix;
+    float sinTheta = 0;
+    float cosTheta = 0;
+    int rotationSequence = 0;
+
+    // fill with the identity matrix
+    MAT_IDENTITY_4X4(mrot);
+
+    // determine the rotation sequence
+    if(fabs(theta_x) > EPSILON_E5)
+    {
+        rotationSequence |= 1;
+    }
+
+    if(fabs(theta_y) > EPSILON_E5)
+    {
+        rotationSequence |= 2;
+    }
+
+    if(fabs(theta_z) > EPSILON_E5)
+    {
+        rotationSequence |= 4;
+    }
+
+    switch(rotationSequence)
+    {
+        // no rotation
+        case 0:
+            return;
+            break;
+
+        // x rotation
+        case 1:
+            // compute the sine and cosine of the angle
+            cosTheta = Fast_Cos(theta_x);
+            sinTheta = Fast_Sin(theta_x);
+
+            // initialise the matrix
+            Mat_Init_4X4(&mx, 1, 0, 0, 0, 0, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1);
+
+            // copy to the output matrix
+            MAT_COPY_4X4(&mx, mrot);
+            return;
+
+        // y rotation
+        case 2:
+            // compute the sine and cosine of the angle
+            cosTheta = Fast_Cos(theta_y);
+            sinTheta = Fast_Sin(theta_y);
+
+            // initialise the matrix
+            Mat_Init_4X4(&my, cosTheta, 0, -sinTheta, 0, 0, 1, 0, 0, sinTheta, 0, cosTheta, 0, 0, 0, 0, 1);
+
+            // copy to the output matrix
+            MAT_COPY_4X4(&my, mrot);
+            return;
+
+        // xy rotation
+        case 3:
+            cosTheta = Fast_Cos(theta_x);
+            sinTheta = Fast_Sin(theta_x);
+
+            Mat_Init_4X4(&mx, 1, 0, 0, 0, 0, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1);
+
+            cosTheta = Fast_Cos(theta_y);
+            sinTheta = Fast_Sin(theta_y);
+
+            Mat_Init_4X4(&my, cosTheta, 0, -sinTheta, 0, 0, 1, 0, 0, sinTheta, 0, cosTheta, 0, 0, 0, 0, 1);
+
+            Mat_Mul_4X4(&mx, &my, mrot);
+            return;
+
+        // z rotation
+        case 4:
+            cosTheta = Fast_Cos(theta_z);
+            sinTheta = Fast_Sin(theta_z);
+
+            Mat_Init_4X4(&mz, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+
+            MAT_COPY_4X4(&mz, mrot);
+            return;
+
+        // xz rotation
+        case 5:
+            // create the matrix fo the X rotation
+            cosTheta = Fast_Cos(theta_x);
+            sinTheta = Fast_Sin(theta_x);
+
+            Mat_Init_4X4(&mx, 1, 0, 0, 0, 0, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1);
+
+            // create the matrix for the Z rotation
+            cosTheta = Fast_Cos(theta_z);
+            sinTheta = Fast_Sin(theta_z);
+
+            Mat_Init_4X4(&mz, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1, 0,0, 0, 0, 1);
+
+            // multiply both matrices
+            Mat_Mul_4X4(&mx, &mz, mrot);
+
+            return;
+
+        case 6:
+            // create the matrix for the Y rotation
+            cosTheta = Fast_Cos(theta_y);
+            sinTheta = Fast_Sin(theta_y);
+
+            Mat_Init_4X4(&my, cosTheta, 0, -sinTheta, 0, 0, 1, 0, 0, sinTheta, 0, cosTheta, 0, 0, 0, 0, 1);
+
+            // create the matrix for the Z rotation
+            cosTheta = Fast_Cos(theta_z);
+            sinTheta = Fast_Sin(theta_z);
+
+            Mat_Init_4X4(&mz, cosTheta, sinTheta, 0, 0,-sinTheta, cosTheta, 0, 0,0, 0, 1, 0,0, 0, 0, 1);
+
+            // multiply the Y and Z matrices.
+            Mat_Mul_4X4(&my, &mz, mrot);
+
+            return;
+
+        // xyz rotation
+        case 7:
+            // create the matrix for the X rotation
+            cosTheta = Fast_Cos(theta_x);
+            sinTheta = Fast_Sin(theta_x);
+
+            Mat_Init_4X4(&mx, 1, 0, 0, 0, 0, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1);
+
+            // create the matrix for the Y rotation
+            cosTheta = Fast_Cos(theta_y);
+            sinTheta = Fast_Sin(theta_y);
+
+            Mat_Init_4X4(&my, cosTheta, 0, -sinTheta, 0, 0, 1, 0, 0, sinTheta, 0, cosTheta, 0, 0, 0, 0, 1);
+
+            // create the matrix for the Z rotation
+            cosTheta = Fast_Cos(theta_z);
+            sinTheta = Fast_Sin(theta_z);
+
+            Mat_Init_4X4(&mz, cosTheta, sinTheta, 0, 0, -sinTheta, cosTheta, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+
+            // multiply the matrices; order is important.
+            Mat_Mul_4X4(&mx, &my, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &mz, mrot);
+            return;
+        default:
+            break;
+
+    }
+}

@@ -628,6 +628,10 @@ void Mat_Init_4X4(MATRIX4X4* ma,
     float m30, float m31, float m32, float m33);
 void Print_Mat_4X4(MATRIX4X4* ma, char *name);
 
+// helper function takes a set if euler angles and computes
+// a rotation matrix from them.
+void Build_XYZ_Rotation_MATRIX4X4(float theta_x, float theta_y, float theta_z, MATRIX4X4* mrot);
+
 // quaternion functions
 void QUAT_Add(QUAT* q1, QUAT* q2, QUAT* qsum);
 void QUAT_Sub(QUAT* q1, QUAT* q2, QUAT* qdiff);
