@@ -106,4 +106,11 @@ inline void Scale_OBJECT4DV1(OBJECT4DV1* obj, VECTOR4D* scale)
     obj->averageRadius *= fscale;
 }
 
+// builds up a general local to world transformation matrix that is really nothing more than a translation
+// of the origin by the amount specified in vpos
+inline void Build_Model_To_World_MATRIX4X4(VECTOR4D* position, MATRIX4X4* output)
+{
+    Mat_Init_4X4(output, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, position->x, position->y, position->z, 1);
+}
 
+void Model_To_World_OBJECT4DV1(OBJECT4DV1* object, int transformType);

@@ -275,3 +275,22 @@ float Compute_OBJECT4DV1_Radius(OBJECT4DV1* obj)
 
     return obj->maximumRadius;
 }
+
+// converts the local model coordinates of the sent object into world coordinates.
+void Model_To_World_OBJECT4DV1(OBJECT4DV1* object, int transformType)
+{
+    if(transformType == TRANSFORM_LOCAL_TO_TRANS)
+    {
+        for(int vertex = 0; vertex < object->numVertices; vertex++)
+        {
+            VECTOR4D_Add(&object->vlistLocalVertices[vertex], &object->worldPosition, &object->vlistTransformedVertices[vertex]);
+        }
+    }
+    else
+    {
+        for(int vertex = 0; vertex < object->numVertices; vertex++)
+        {
+            VECTOR4D_Add(&object->vlistTransformedVertices[vertex], &object->worldPosition, &object->vlistTransformedVertices[vertex]);
+        }
+    }
+}

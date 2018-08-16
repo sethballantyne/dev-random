@@ -538,3 +538,293 @@ void Graphics_ClearSurface(SDL_Surface *surface, Uint8 R, Uint8 G, Uint8 B)
 {
     Graphics_FillRect(surface, 0, 0, surface->w, surface->h, R, G, B);
 }
+
+void Transform_OBJECT4DV1(OBJECT4DV1* object, MATRIX4X4* transformationMatrix, int selectedCoordinates, bool transformOrientation)
+{
+    switch(selectedCoordinates)
+    {
+        case TRANSFORM_LOCAL_ONLY:
+
+            // transform each local/model vertex of the object mesh in place
+            for(int vertex = 0; vertex < object->numVertices; vertex++)
+            {
+                POINT4D transformationResult;
+
+                // transform the specified local vertex
+                Mat_Mul_VECTOR4D_4X4(&object->vlistLocalVertices[vertex], transformationMatrix, &transformationResult);
+
+                // copy it back in
+                VECTOR4D_COPY(&object->vlistLocalVertices[vertex], &transformationResult);
+            }
+            break;
+
+        case TRANSFORM_TRANS_ONLY:
+            // transform each "transformed" vertec of the object mesh in place.
+
+            for(int vertex = 0; vertex < object->numVertices; vertex++)
+            {
+                POINT4D transformationResult;
+
+                // Transform the point. Note we're using vlistTransformedVertices[] here,
+                // not vlistLocalVertices[] as above.
+                Mat_Mul_VECTOR4D_4X4(&object->vlistTransformedVertices[vertex], transformationMatrix, &transformationResult);
+
+                // copy it back out.
+                VECTOR4D_COPY(&object->vlistTransformedVertices[vertex], &transformationResult);
+            }
+            break;
+
+        case TRANSFORM_LOCAL_TO_TRANS:
+
+            // transfom each local / model  vertex of the object mesh and store the result
+            // in the transformed vertex list.
+            for(int vertex = 0; vertex < object->numVertices; vertex++)
+            {
+                POINT4D transformationResult;
+
+
+                Mat_Mul_VECTOR4D_4X4(&object->vlistLocalVertices[vertex], transformationMatrix, &object->vlistTransformedVertices[vertex]);
+            }
+            break;
+        default:
+            break;
+    }
+
+    if(transformOrientation)
+    {
+        VECTOR4D rotationResult;
+
+        // rotate the ux of the orientation basis
+        Mat_Mul_VECTOR4D_4X4(&object->ux, transformationMatrix, &rotationResult);
+        VECTOR4D_COPY(&object->ux, &rotationResult);
+
+        // rotate the uy of the orientation basis
+        Mat_Mul_VECTOR4D_4X4(&object->uy, transformationMatrix, &rotationResult);
+        VECTOR4D_COPY(&object->uy, &rotationResult);
+
+        // rotate the uz of the orientation basis
+        Mat_Mul_VECTOR4D_4X4(&object->uz, transformationMatrix, &rotationResult);
+        VECTOR4D_COPY(&object->uz, &rotationResult);
+    }
+}
+
+
+void Rotate_XYZ_OBJECT4DV1(OBJECT4DV1* object, float thetaX, float thetaY, float thetaZ)
+{
+    MATRIX4X4 rotationMatrix;
+
+    Build_XYZ_Rotation_MATRIX4X4(thetaX, thetaY, thetaZ, &rotationMatrix);
+
+    // rotate each point of the mesh in local/model coordinates
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        POINT4D transformationResult;
+
+        // transform the point
+        Mat_Mul_VECTOR4D_4X4(&object->vlistLocalVertices[vertex], &rotationMatrix, &transformationResult);
+
+        // store the result back
+        VECTOR4D_COPY(&object->vlistLocalVertices[vertex], &transformationResult);
+    }
+
+    // rotate the orientation basis of the object
+    VECTOR4D rotationResult;
+
+    // rotate the ux of the orientation basis
+    Mat_Mul_VECTOR4D_4X4(&object->ux, &rotationMatrix, &rotationResult);
+    VECTOR4D_COPY(&object->ux, &rotationResult);
+
+    // rotate the uy of the orientation basis
+    Mat_Mul_VECTOR4D_4X4(&object->uy, &rotationMatrix, &rotationResult);
+    VECTOR4D_COPY(&object->uy, &rotationResult);
+
+    // rotate the uz of the orientation basis
+    Mat_Mul_VECTOR4D_4X4(&object->uz, &rotationMatrix, &rotationResult);
+    VECTOR4D_COPY(&object->uz, &rotationResult);
+
+}
+
+void World_To_Camera_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera)
+{
+    // this is one way to do it, you might instead transform
+    // the global list of polygons in the render list since you 
+    // are guaranteed that those polys represent geometry that 
+    // has passed through backface culling (if any)
+
+    // transform each vertex in the object to camera coordinates.
+    // assumes the object has already been transformed to world
+    // coordinates and the result is in OBJECT4DV1::vlistTransformedVertices
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        POINT4D transformationResult;
+
+        // transform object->vlistTransformedVertices[vertex]
+        Mat_Mul_VECTOR4D_4X4(&object->vlistTransformedVertices[vertex], &camera->worldToCameraTransform, &transformationResult);
+
+        // store the results back
+        VECTOR4D_COPY(&object->vlistTransformedVertices[vertex], &transformationResult);
+    }
+}
+
+int Cull_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera, int cullFlags)
+{
+    // result of transforming the center of the bounding sphere
+    POINT4D spherePosition;
+
+    Mat_Mul_VECTOR4D_4X4(&object->worldPosition, &camera->worldToCameraTransform, &spherePosition);
+
+    if(cullFlags & CULL_OBJECT_Z_PLANE) // only cull the Z clipping plane
+    {
+        // is the object outside the bounds of the clipping plane?
+        if(((spherePosition.z - object->maximumRadius) > camera->farZClippingPlane) ||
+            ((spherePosition.z + object->maximumRadius) < camera->nearZClippingPlane))
+        {
+            // why yes, yes it is; lets not draw it!
+            // okay, good idea.
+            // Word.
+            object->state |= OBJECT4DV1_STATE_CULLED;
+            return 1;
+        }
+    }
+
+    if(cullFlags & CULL_OBJECT_X_PLANE)
+    {
+        // cull on the X clipping plane! FUCK YEAH! WOOOOOOOO!!!! HACK THE PLANET!!!
+        float zTest = 0.5f * camera->viewPlaneWidth * spherePosition.z / camera->viewDistance;
+
+        // test the left and right clipping planes against the leftmost and rightmost
+        // points of the bounding sphere.
+        if(((spherePosition.z - object->maximumRadius) > zTest) || // right side
+            ((spherePosition.z + object->maximumRadius) < -zTest))  // left side
+        {
+            object->state |= OBJECT4DV1_STATE_CULLED;
+            return 1;
+        }
+    }
+
+    if(cullFlags & CULL_OBJECT_Y_PLANE)
+    {
+        float zTest = 0.5f * camera->viewPlaneHeight * spherePosition.z / camera->viewDistance;
+
+        // test the top and bottom clipping planes against the bottommost and topmost
+        // points of the bounding sphere.
+        if(((spherePosition.y - object->maximumRadius) > zTest) || // top side
+            ((spherePosition.y + object->maximumRadius) < -zTest)) // bottom side
+        {
+            object->state |= OBJECT4DV1_STATE_CULLED;
+            return 1;
+        }
+    }
+
+    return 0; // invalid flags passed
+}
+
+void Remove_Backfaces_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera)
+{
+    if(object->state & OBJECT4DV1_STATE_CULLED)
+    {
+        return;
+    }
+
+    for(int polygon = 0; polygon < object->numPolygons; polygon++)
+    {
+        POLYGON4DV1* currentPolygon = &object->plist[polygon];
+
+        // test this polygon if and only if it's not clipped, not culled,
+        // active, and visible and not 2 sided. 
+        // note the test for the POLYGON4DV1_STATE_BACKFACE flag. If it's alredy
+        // been set, then it's already been determined that this polygon is a backface
+        // so.. move on.
+        if(!(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+            (currentPolygon->attributes & POLYGON4DV1_ATTR_TWOSIDED) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        // remember that polygons are not self-contained; they're based on the 
+        // vertex list stored in the object.
+        int verticeIndex1 = currentPolygon->vertices[0];
+        int verticeIndex2 = currentPolygon->vertices[1];
+        int verticeIndex3 = currentPolygon->vertices[2];
+
+
+        // we need to compute the normal of this polygon face.
+        // remember the vertices are in cw order.
+        VECTOR4D u; // u = p0->p1
+        VECTOR4D v; // v = p0->p2
+        VECTOR4D normal; // normal = u * v
+
+        VECTOR4D_Build(&object->vlistTransformedVertices[verticeIndex1],
+            &object->vlistTransformedVertices[verticeIndex2], &u);
+        VECTOR4D_Build(&object->vlistTransformedVertices[verticeIndex1],
+            &object->vlistTransformedVertices[verticeIndex3], &v);
+
+        // compute the cross the product
+        VECTOR4D_Cross(&u, &v, &normal);
+
+        // create the eye vector to viewpoint
+        VECTOR4D view;
+        VECTOR4D_Build(&object->vlistTransformedVertices[verticeIndex1], &camera->position, &view);
+
+        // compute the dot product, because that'd probably be quite handy in the long run.
+        // Boy howdy.
+        float dotProduct = VECTOR4D_Dot(&normal, &view);
+
+        // 0 = scathing.
+        // if the sign is > 0 then the polygon is visible.
+        // < 0 is invisible.
+        if(dotProduct <= 0.0f)
+        {
+            currentPolygon->state |= POLYGON4DV1_STATE_BACKFACE;
+        }
+
+    }
+}
+
+void Remove_Backfaces_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera)
+{
+    for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // is this polygon valid?
+        // test this polygon if and only if it's not clipped, not culled,
+        // active, and visible and not 2 sided. 
+        // note the test for the POLYGON4DV1_STATE_BACKFACE flag.If it's alredy
+        // been set, then it's already been determined that this polygon is a backface
+        // so.. move on. 
+        if((currentPolygon == nullptr) ||
+            !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+            (currentPolygon->attributes & POLYGON4DV1_ATTR_TWOSIDED) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        // u & v are used to compute the normal of the polygon face
+        VECTOR4D u; // u = p0->p1
+        VECTOR4D v; // v = p0->p2
+        VECTOR4D normal; // normal = u * v
+
+        // build u, v
+        VECTOR4D_Build(&currentPolygon->transformedVertexList[0], &currentPolygon->transformedVertexList[1], &u);
+        VECTOR4D_Build(&currentPolygon->transformedVertexList[0], &currentPolygon->transformedVertexList[2], &v);
+
+        // compute the cross product
+        VECTOR4D_Cross(&u, &v, &normal);
+
+        // create the eye vector to viewpoint
+        VECTOR4D view;
+        VECTOR4D_Build(&currentPolygon->transformedVertexList[0], &camera->position, &view);
+
+        float dotProduct = VECTOR4D_Dot(&normal, &view);
+
+        if(dotProduct <= 0.0f)
+        {
+            currentPolygon->state |= POLYGON4DV1_STATE_BACKFACE;
+        }
+    }
+}

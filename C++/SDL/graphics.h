@@ -3,23 +3,15 @@
 #include <string>
 #include "math.h"
 
-struct VERTEX2DF
-{
-    float x = 0.0f;
-    float y = 0.0f; 
-};
+// perform the transformation in place on the local/world vertex list 
+#define TRANSFORM_LOCAL_ONLY       0 
 
-struct POLYGON2D
-{
-    bool isVisible = true;        // state of polygon
-    int numberOfVertices = 0;  // number of vertices
-    int xPositionCenter = 0;
-    int yPositionCenter = 0;   // position of center of polygon  
-    int xVelocity = 0;
-    int yVelocity = 0;    // initial velocity
-    Uint32 colour = 0;      // could be index or PALETTENTRY
-    VERTEX2DF *vertexList = nullptr; // pointer to vertex list
-};
+// perfrom the transformation in place on the "transformed" vertex list
+#define TRANSFORM_TRANS_ONLY       1  
+
+// perform the transformation to the local vertex list, but store the results in the
+// transformed vertex list
+#define TRANSFORM_LOCAL_TO_TRANS   2  
 
 #define POLYGON4DV1_ATTR_TWOSIDED           0x0001
 #define POLYGON4DV1_ATTR_TRANSPARENT        0x0002
@@ -39,6 +31,59 @@ struct POLYGON2D
 #define POLYGON4DV1_STATE_ACTIVE             0x0001
 #define POLYGON4DV1_STATE_CLIPPED            0x0002
 #define POLYGON4DV1_STATE_BACKFACE           0x0004
+
+// defines for objects version 1
+#define OBJECT4DV1_MAX_VERTICES           1024  // 64
+#define OBJECT4DV1_MAX_POLYS              1024 // 128
+
+// states for objects
+#define OBJECT4DV1_STATE_ACTIVE           0x0001
+#define OBJECT4DV1_STATE_VISIBLE          0x0002 
+#define OBJECT4DV1_STATE_CULLED           0x0004a
+
+#define RENDERLIST4DV1_MAX_POLYGONS          32768
+
+// general culling flags
+#define CULL_OBJECT_X_PLANE           0x0001 // cull on the x clipping planes
+#define CULL_OBJECT_Y_PLANE           0x0002 // cull on the y clipping planes
+#define CULL_OBJECT_Z_PLANE           0x0004 // cull on the z clipping planes
+#define CULL_OBJECT_XYZ_PLANES        (CULL_OBJECT_X_PLANE | CULL_OBJECT_Y_PLANE | CULL_OBJECT_Z_PLANE)
+
+#define CAMERA_ROTATE_SEQUENCE_XYZ  0
+#define CAMERA_ROTATE_SEQUENCE_YXZ  1
+#define CAMERA_ROTATE_SEQUENCE_XZY  2
+#define CAMERA_ROTATE_SEQUENCE_YZX  3
+#define CAMERA_ROTATE_SEQUENCE_ZYX  4
+#define CAMERA_ROTATE_SEQUENCE_ZXY  5
+
+// defines for special types of camera projections
+#define CAMERA_PROJECTION_NORMALIZED        0x0001
+#define CAMERA_PROJECTION_SCREEN            0x0002
+#define CAMERA_PROJECTION_FOV90             0x0004
+
+#define CAMERA_MODEL_EULER            0x0008
+#define CAMERA_MODEL_UVN              0x0010
+
+#define UVN_MODE_SIMPLE            0 
+#define UVN_MODE_SPHERICAL         1
+
+struct VERTEX2DF
+{
+    float x = 0.0f;
+    float y = 0.0f;
+};
+
+struct POLYGON2D
+{
+    bool isVisible = true;        // state of polygon
+    int numberOfVertices = 0;  // number of vertices
+    int xPositionCenter = 0;
+    int yPositionCenter = 0;   // position of center of polygon  
+    int xVelocity = 0;
+    int yVelocity = 0;    // initial velocity
+    Uint32 colour = 0;      // could be index or PALETTENTRY
+    VERTEX2DF *vertexList = nullptr; // pointer to vertex list
+};
 struct POLYGON4DV1
 {
     // polygon state information
@@ -80,15 +125,6 @@ struct POLYGONF4DV1
     // pointer to the previous polygon in the list
     POLYGONF4DV1* previous;
 };
-
-// defines for objects version 1
-#define OBJECT4DV1_MAX_VERTICES           1024  // 64
-#define OBJECT4DV1_MAX_POLYS              1024 // 128
-
-// states for objects
-#define OBJECT4DV1_STATE_ACTIVE           0x0001
-#define OBJECT4DV1_STATE_VISIBLE          0x0002 
-#define OBJECT4DV1_STATE_CULLED           0x0004
 
 // an object based on a vertex list and a list of polygons
 struct OBJECT4DV1
@@ -136,6 +172,66 @@ struct OBJECT4DV1
 
     // the objects polygons.
     POLYGON4DV1 plist[OBJECT4DV1_MAX_POLYS];
+};
+
+struct RENDERLIST4DV1
+{
+    // render list state.
+    int state;
+
+    // attributes of the render list
+    int attributes;
+
+    // each pointer points to a self containd "renderable" polygon face
+    POLYGONF4DV1* polygonPointers[RENDERLIST4DV1_MAX_POLYGONS];
+
+    // where the actual polygon faces are stored
+    POLYGONF4DV1* polygonData[RENDERLIST4DV1_MAX_POLYGONS];
+
+    // the number of polygons in the render list
+    int numPolygons;
+};
+
+struct CAMERA4DV1
+{
+    int state;
+    int attributes;
+    POINT4D position; // world position of the camera used by both camera models.
+    VECTOR4D direction; // angles the look at direction of the camera for simple euler camera models.
+    // Also the elevation and heading of the uvn model.
+    // uvn used to track camera orientation
+    VECTOR4D u;
+    VECTOR4D v;
+    VECTOR4D n;
+
+    VECTOR4D target; // the look at target.
+    float viewDistance; // focal length
+    float fieldOfView; // FOV for both the horizontal and vertical axes
+    float nearZClippingPlane; // near Z constant clipping plane
+    float farZClippingPlane; // far Z constant clipping plane
+
+    PLANE3D rightClippingPlane;
+    PLANE3D leftClippingPlane;
+    PLANE3D topClippingPlane;
+    PLANE3D bottomClippingPlane;
+
+    // the width and height of the view plane to project onto.
+    // Usually 2x2 for normalised projection or the same size as the viewport
+    // or screen window.
+    float viewPlaneWidth;
+    float viewPlaneHeight;
+
+    // screen and viewport are synomomous
+    float viewportWidth;
+    float viewportHeight;
+    float viewportCenterX; // x position of the viewports center
+    float viewportCenterY; // y position of the viewports center
+
+    float aspectRatio;
+
+    MATRIX4X4 worldToCameraTransform;
+    MATRIX4X4 cameraToPerspectiveTransform;
+    MATRIX4X4 perspectiveToScreenTransform;
 };
 
 // returns the pixel colour at the specified coordinate
@@ -230,3 +326,66 @@ void Graphics_RenderSurface(SDL_Surface *screen, SDL_Surface *image, Uint32 x, U
 void Graphics_FillRect(SDL_Surface *surface, int fromX, int fromY, int toX, int toY, Uint8 R, Uint8 G, Uint8 B);
 
 void Graphics_ClearSurface(SDL_Surface *surface, Uint8 R, Uint8 G, Uint8 B);
+
+// transforms all of the vertices in the local or transformed array by the sent matrix
+void Transform_OBJECT4DV1(OBJECT4DV1* object, MATRIX4X4* transformationMatrix, int selectedCoordinates, bool transformOrientation);
+
+// rotates an object parallel to the XYZ axes in that order.
+void Rotate_XYZ_OBJECT4DV1(OBJECT4DV1* object, float thetaX, float thetaY, float thetaZ);
+
+// transforms the world coordinates of an object into camera coordinates.
+// based on the sent camera matrix but it totally disregards the polygons themselves
+// it only works on the vertices in the object->vlistTransformedVertices list.
+void World_To_Camera_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
+
+// builds up a camera to perspective transformation
+// matrix, in most cases the camera would have a 2x2 normalized
+// view plane with a 90 degree FOV, since the point of the having
+// this matrix must be to also have a perspective to screen (viewport)
+// matrix that scales the normalized coordinates, also the matrix
+// assumes that you are working in 4D homogenous coordinates and at 
+// some point there will be a 4D->3D conversion, it might be immediately
+// after this transform is applied to vertices, or after the perspective
+// to screen transform
+inline void Build_Camera_To_Perspective_MATRIX4X4(CAMERA4DV1* camera, MATRIX4X4* output)
+{
+    float temp = camera->viewDistance * camera->aspectRatio;
+    Mat_Init_4X4(output, camera->viewDistance, 0, 0, 0, 0, temp, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0);
+}
+
+// builds up a perspective to screen transformation matrix.
+inline void Build_Persepective_To_Screen_4D_MATRIX4X4(CAMERA4DV1* camera, MATRIX4X4* output)
+{
+    // assumes that you want to perform the
+    // transform in homogeneous coordinates and at raster time there will be 
+    // a 4D->3D homogenous conversion.
+    float alpha = ((0.5f * camera->viewportWidth) - 0.5f);
+    float beta = ((0.5f * camera->viewportHeight) - 0.5f);
+
+    Mat_Init_4X4(output, alpha, 0, 0, 0, 0, -beta, 0, 0, alpha, beta, 1, 0, 0, 0, 0, 1);
+}
+
+// creates a single matrix that performs the entire camera->perspective->screen transform. 
+// Note that the camera must be created with a viewplane specified to be the size of the viewport.
+// After this transform is applied the vertex must be converted from 4D homogeneous coordinates to 3D coordinates.
+// The z is irrelevant since the data would be used for the screen, but still the division by w is needed no matter
+// what.
+inline void Build_Camera_To_Screen_MATRIX4X4(CAMERA4DV1* camera, MATRIX4X4* output)
+{
+    float alpha = ((0.5f * camera->viewportWidth) - 0.5f);
+    float beta = ((0.5f * camera->viewportHeight) - 0.5f);
+
+    Mat_Init_4X4(output, camera->viewDistance, 0, 0, 0, 0, -camera->viewDistance, 0, 0, alpha, beta, 1, 1, 0, 0, 0, 0);
+}
+
+// culls an entire object from the viewing frustrum. cullFlags determines on which axes the culling takes place.
+// cullFlags can consists of one or more or'd CULL_OBJECT_*_PLANE defines.
+int Cull_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera, int cullFlags);
+
+// removes the backfaces from an object's polygon mesh. It does this based on the vertex
+// data in object->vlistTransformedVertices[] along with the camera position (only).
+// note that only the backface state is set in each polygon
+void Remove_Backfaces_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
+
+// flags the backface polygons present in the specified renderList.
+void Remove_Backfaces_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
