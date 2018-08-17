@@ -186,7 +186,7 @@ struct RENDERLIST4DV1
     POLYGONF4DV1* polygonPointers[RENDERLIST4DV1_MAX_POLYGONS];
 
     // where the actual polygon faces are stored
-    POLYGONF4DV1* polygonData[RENDERLIST4DV1_MAX_POLYGONS];
+    POLYGONF4DV1 polygonData[RENDERLIST4DV1_MAX_POLYGONS];
 
     // the number of polygons in the render list
     int numPolygons;
@@ -389,3 +389,58 @@ void Remove_Backfaces_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
 
 // flags the backface polygons present in the specified renderList.
 void Remove_Backfaces_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
+
+// transforms the camera coordinates of an object into perspective coordinates
+// based on the provided CAMERA4DV1 instance. 
+void Camera_To_Perspective_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
+
+// transforms the camera coordinates of an object into Screen scaled perspective coordinates based on the 
+// sent camera object. 
+void Camera_To_Perspective_Screen_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
+
+// transforms the perspective coordinates of an object into screen coordinates, based on the sent viewport info.
+void Perspective_To_Screen_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera);
+
+// converts all vertices in the transformed vertex list from 4D homogeneous coordinates to normal 3D coordinates
+// by dividing each x,y,z component by w.
+void Convert_From_Homogenous4D_OBJECT4DV1(OBJECT4DV1* object);
+
+// transforms all of the polygons vertices in the local or trans array of the render list by the sent matrix
+void Transform_RENDERLIST4DV1(RENDERLIST4DV1* renderList, MATRIX4X4* transformationMatrix, int coordinatesToTransform);
+
+// converts the local model coordinates of the sent render list into world coordinates, the results are stored
+// in the transformed vertex list (tvlist) within the renderlist.
+void Model_To_World_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POINT4D* worldPosition, int coordinatesToTransform);
+
+// converts all valid polygons vertices in the transformed vertex list from 4D homogeneous coordinates 
+// to normal 3D coordinates by dividing each x,y,z component by w
+void Convert_From_Homogenous4D_RENDERLIST4DV1(RENDERLIST4DV1* renderList);
+
+// transforms each polygon in the global render list to camera coordinates based on the sent camera transform matrix
+void World_To_Camera_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
+
+// transforms each polygon in the global render list into perspective coordinates, based on the 
+// sent camera object.
+void Camera_To_Perspective_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
+
+// transforms the camera coordinates of an object into Screen scaled perspective coordinates, based on the 
+// sent camera object.
+void Camera_To_Perspective_Screen_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
+
+// transforms the perspective coordinates of the render
+// list into screen coordinates, based on the sent viewport in the camera.
+void Perspective_To_Screen_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera);
+
+// intializes and resets the sent render list and readies it for polygons/faces to be inserted into it.
+// note that the render list in this version is composed of an array FACE4DV1 pointer objects, you call this
+// function each frame.
+inline void Reset_RENDERLIST4DV1(RENDERLIST4DV1* renderList)
+{
+    renderList->numPolygons = 0;
+}
+
+// resets the objects culled, clipped and backface flags.
+void Reset_OBJECT4DV1(OBJECT4DV1* object);
+
+// inserts the specified polygon into the specified RENDERLIST4DV1 instance.
+int Insert_POLYGON4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGON4DV1* polygon);

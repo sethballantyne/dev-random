@@ -80,22 +80,22 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
 
         case ClipCodeN:
             yc1 = clipRegionY;
-            xc1 = x1 + 0.5 + (clipRegionY - y1) * (x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY - y1) * (x2 - x1) / (y2 - y1);
             break;
 
         case ClipCodeS:
             yc1 = clipRegionY2;
-            xc1 = x1 + 0.5 + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
             break;
 
         case ClipCodeW:
             xc1 = clipRegionX;
-            yc1 = y1 + 0.5 + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
+            yc1 = y1 + 0.5f + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
             break;
 
         case ClipCodeE:
             xc1 = clipRegionX2;
-            yc1 = y1 + 0.5 + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
+            yc1 = y1 + 0.5f + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
             break;
 
             // these cases are more complex, must compute 2 intersections
@@ -103,14 +103,14 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
 
             // north hline intersection
             yc1 = clipRegionY;
-            xc1 = x1 + 0.5 + (clipRegionY - y1)*(x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY - y1)*(x2 - x1) / (y2 - y1);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc1 < clipRegionX || xc1 > clipRegionX2)
             {
                 // east vline intersection
                 xc1 = clipRegionX2;
-                yc1 = y1 + 0.5 + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
+                yc1 = y1 + 0.5f + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
             } // end if
 
             break;
@@ -119,14 +119,14 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
 
             // south hline intersection
             yc1 = clipRegionY2;
-            xc1 = x1 + 0.5 + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc1 < clipRegionX || xc1 > clipRegionX2)
             {
                 // east vline intersection
                 xc1 = clipRegionX2;
-                yc1 = y1 + 0.5 + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
+                yc1 = y1 + 0.5f + (clipRegionX2 - x1)*(y2 - y1) / (x2 - x1);
             } // end if
 
             break;
@@ -135,13 +135,13 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
 
             // north hline intersection
             yc1 = clipRegionY;
-            xc1 = x1 + 0.5 + (clipRegionY - y1)*(x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY - y1)*(x2 - x1) / (y2 - y1);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc1 < clipRegionX || xc1 > clipRegionX2)
             {
                 xc1 = clipRegionX;
-                yc1 = y1 + 0.5 + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
+                yc1 = y1 + 0.5f + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
             } // end if
 
             break;
@@ -150,13 +150,13 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
 
             // south hline intersection
             yc1 = clipRegionY2;
-            xc1 = x1 + 0.5 + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
+            xc1 = x1 + 0.5f + (clipRegionY2 - y1)*(x2 - x1) / (y2 - y1);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc1 < clipRegionX || xc1 > clipRegionX2)
             {
                 xc1 = clipRegionX;
-                yc1 = y1 + 0.5 + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
+                yc1 = y1 + 0.5f + (clipRegionX - x1)*(y2 - y1) / (x2 - x1);
             } // end if
             break;
 
@@ -199,14 +199,14 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
         {
             // north hline intersection
             yc2 = clipRegionY;
-            xc2 = x2 + 0.5 + (clipRegionY - y2)*(x1 - x2) / (y1 - y2);
+            xc2 = x2 + 0.5f + (clipRegionY - y2)*(x1 - x2) / (y1 - y2);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc2 < clipRegionX || xc2 > clipRegionX2)
             {
                 // east vline intersection
                 xc2 = clipRegionX2;
-                yc2 = y2 + 0.5 + (clipRegionX2 - x2)*(y1 - y2) / (x1 - x2);
+                yc2 = y2 + 0.5f + (clipRegionX2 - x2)*(y1 - y2) / (x1 - x2);
             } // end if
 
         } break;
@@ -215,14 +215,14 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
         {
             // south hline intersection
             yc2 = clipRegionY2;
-            xc2 = x2 + 0.5 + (clipRegionY2 - y2)*(x1 - x2) / (y1 - y2);
+            xc2 = x2 + 0.5f + (clipRegionY2 - y2)*(x1 - x2) / (y1 - y2);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc2 < clipRegionX || xc2 > clipRegionX2)
             {
                 // east vline intersection
                 xc2 = clipRegionX2;
-                yc2 = y2 + 0.5 + (clipRegionX2 - x2)*(y1 - y2) / (x1 - x2);
+                yc2 = y2 + 0.5f + (clipRegionX2 - x2)*(y1 - y2) / (x1 - x2);
             } // end if
 
         } break;
@@ -231,13 +231,13 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
         {
             // north hline intersection
             yc2 = clipRegionY;
-            xc2 = x2 + 0.5 + (clipRegionY - y2)*(x1 - x2) / (y1 - y2);
+            xc2 = x2 + 0.5f + (clipRegionY - y2)*(x1 - x2) / (y1 - y2);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc2 < clipRegionX || xc2 > clipRegionX2)
             {
                 xc2 = clipRegionX;
-                yc2 = y2 + 0.5 + (clipRegionX - x2)*(y1 - y2) / (x1 - x2);
+                yc2 = y2 + 0.5f + (clipRegionX - x2)*(y1 - y2) / (x1 - x2);
             } // end if
 
         } break;
@@ -246,13 +246,13 @@ int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int c
         {
             // south hline intersection
             yc2 = clipRegionY2;
-            xc2 = x2 + 0.5 + (clipRegionY2 - y2)*(x1 - x2) / (y1 - y2);
+            xc2 = x2 + 0.5f + (clipRegionY2 - y2)*(x1 - x2) / (y1 - y2);
 
             // test if intersection is valid, of so then done, else compute next
             if(xc2 < clipRegionX || xc2 > clipRegionX2)
             {
                 xc2 = clipRegionX;
-                yc2 = y2 + 0.5 + (clipRegionX - x2)*(y1 - y2) / (x1 - x2);
+                yc2 = y2 + 0.5f + (clipRegionX - x2)*(y1 - y2) / (x1 - x2);
             } // end if
 
         } break;
@@ -580,9 +580,6 @@ void Transform_OBJECT4DV1(OBJECT4DV1* object, MATRIX4X4* transformationMatrix, i
             // in the transformed vertex list.
             for(int vertex = 0; vertex < object->numVertices; vertex++)
             {
-                POINT4D transformationResult;
-
-
                 Mat_Mul_VECTOR4D_4X4(&object->vlistLocalVertices[vertex], transformationMatrix, &object->vlistTransformedVertices[vertex]);
             }
             break;
@@ -827,4 +824,509 @@ void Remove_Backfaces_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* cam
             currentPolygon->state |= POLYGON4DV1_STATE_BACKFACE;
         }
     }
+}
+
+void Camera_To_Perspective_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera)
+{
+    // this implementation disregards the polygons themselves - 
+    // it only works on the vertices in object->vlistTransformedVertices list.
+    // this is one way to do it, you might instead transform
+    // the global list of polygons in the render list since you 
+    // are guaranteed that those polys represent geometry that 
+    // has passed thru backfaces culling (if any)
+    // finally this function is really for experimental reasons only
+    // you would probably never let an object stay intact this far down
+    // the pipeline, since it's probably that there's only a single polygon
+    // that is visible! But this function has to transform the whole mesh!
+
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        float x = object->vlistTransformedVertices[vertex].x;
+        float y = object->vlistTransformedVertices[vertex].y;
+        float z = object->vlistTransformedVertices[vertex].z;
+
+        // transform the vertex by the camera's view distance
+        object->vlistTransformedVertices[vertex].x = camera->viewDistance * x / z;
+        object->vlistTransformedVertices[vertex].y = camera->viewDistance * y * camera->aspectRatio / z;
+        // z = z, so no change
+    }
+}
+
+void Camera_To_Perspective_Screen_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera)
+{
+    float alpha = (0.5f * camera->viewportWidth) - 0.5f;
+    float beta = (0.5f * camera->viewPlaneHeight) - 0.5f;
+
+    // transform each vertex in the object to perspective screen coordinates,
+    // assuming the object has already been transformed to camera coordinates
+    // and the result is in OBJECT4DV1::vlistTransformedVertices
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        float x = object->vlistTransformedVertices[vertex].x;
+        float y = object->vlistTransformedVertices[vertex].y;
+        float z = object->vlistTransformedVertices[vertex].z;
+
+        // transform the vertex by the view parameters in the camera
+        object->vlistTransformedVertices[vertex].x = camera->viewDistance * x / z;
+        object->vlistTransformedVertices[vertex].y = camera->viewDistance * y / z;
+
+        // now the coordinates are in the range x:(-viewport_width/2 to viewport_width/2)
+        // and y:(-viewport_height/2 to viewport_height/2), thus we need a translation and
+        // since the y-axis is inverted, we need to invert y to complete the screen 
+        // transform:
+        object->vlistTransformedVertices[vertex].x = object->vlistTransformedVertices[vertex].x + alpha;
+        object->vlistTransformedVertices[vertex].y = -object->vlistTransformedVertices[vertex].y + beta;
+    }
+}
+
+void Perspective_To_Screen_OBJECT4DV1(OBJECT4DV1* object, CAMERA4DV1* camera)
+{
+    // transform each vertex in the object to screen coordinates
+    // assumes the object has already been transformed to perspective
+    // coordinates and the result is in OBJECT4DV1::viewlistTransformedVertices
+
+    float alpha = (0.5f * camera->viewportWidth) - 0.5f;
+    float beta = (0.5f * camera->viewportHeight) - 0.5f;
+
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        // assumes the vertex is in perspective normalised coordinates from -1 to 1
+        // on each axis. Scale them to viewport and y axis and project to screen.
+
+        // transform the vertex by the view parameters in the camera
+        object->vlistTransformedVertices[vertex].x = alpha + alpha * object->vlistTransformedVertices[vertex].x;
+        object->vlistTransformedVertices[vertex].y = beta - beta * object->vlistTransformedVertices[vertex].y;
+    }
+}
+
+void Convert_From_Homogenous4D_OBJECT4DV1(OBJECT4DV1* object)
+{
+    for(int vertex = 0; vertex < object->numVertices; vertex++)
+    {
+        // convert to non-homoegenous coordinates
+        VECTOR4D_DIV_BY_W(&object->vlistTransformedVertices[vertex]);
+    }
+}
+
+void Transform_RENDERLIST4DV1(RENDERLIST4DV1* renderList, MATRIX4X4* transformationMatrix, int coordinatesToTransform)
+{
+    switch(coordinatesToTransform)
+    {
+        case TRANSFORM_LOCAL_ONLY:
+            for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+            {
+                POLYGONF4DV1 *currentPolygon = renderList->polygonPointers[polygon];
+
+                // transform this polygon if and only if it's not clipped, not culled,
+                // active, and visible, note however the concept of "backface" is 
+                // irrelevant in a wire frame engine though
+                if((currentPolygon == nullptr) ||
+                   !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+                    (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+                    (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+                {
+                    continue;
+                }
+
+                for(int vertex = 0; vertex < 3; vertex++)
+                {
+                    // transform the vertex by the transformationMatrix argument
+                    POINT4D transformationResult;
+
+                    // transform the point indicated by currentPolygon->vertexList[vertex]
+                    Mat_Mul_VECTOR4D_4X4(&currentPolygon->vertexList[vertex], transformationMatrix, &transformationResult);
+
+                    // copy back into currentPolygon->vertexList[vertex]
+                    VECTOR4D_COPY(&currentPolygon->vertexList[vertex], &transformationResult);
+                }
+            }
+            break;
+
+        case TRANSFORM_TRANS_ONLY:
+            // transform each "transformed" vertex of the render list
+            // remember, the idea of the POLYGONF4DV1::transformedVertexList[vertex] array is to accumulate
+            // transformations
+            for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+            {
+                POLYGONF4DV1 *currentPolygon = renderList->polygonPointers[polygon];
+
+                // is this polygon valid?
+                // transform this polygon if and only if it's not clipped, not culled,
+                // active, and visible, note however the concept of "backface" is 
+                // irrelevant in a wire frame engine though
+                if((currentPolygon == nullptr) ||
+                  !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+                   (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+                   (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+                {
+                    continue;
+                }
+
+                for(int vertex = 0; vertex < 3; vertex++)
+                {
+                    // transform the vertex by the transformationMatrix argument
+                    POINT4D transformationResult;
+
+                    // transform the point in currentPolygon->transformedVertexList[vertex]
+                    Mat_Mul_VECTOR4D_4X4(&currentPolygon->transformedVertexList[vertex], transformationMatrix, &transformationResult);
+
+                    // store the result back into currentPolygon->transformedVertexList[vertex]
+                    VECTOR4D_COPY(&currentPolygon->transformedVertexList[vertex], &transformationResult);
+                }
+            }
+            break;
+
+        case TRANSFORM_LOCAL_TO_TRANS:
+            // transform each local/model vertex of the render list and store result
+            // in "transformed" vertex list
+            for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+            {
+                POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+                // is this polygon valid?
+                // transform this polygon if and only if it's not clipped, not culled,
+                // active, and visible, note however the concept of "backface" is 
+                // irrelevant in a wire frame engine though
+                if((currentPolygon == nullptr) ||
+                  !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+                   (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+                   (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+                {
+                    continue;
+                }
+
+                for(int vertex = 0; vertex < 3; vertex++)
+                {
+                    // transform the vertex by mt
+                    Mat_Mul_VECTOR4D_4X4(&currentPolygon->vertexList[vertex], transformationMatrix, &currentPolygon->transformedVertexList[vertex]);
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+void Model_To_World_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POINT4D* worldPosition, int coordinatesToTransform)
+{
+    // interate through the vertex list and transform all the model/local 
+    // coords to world coords by translating the vertex list by
+    // the amount world_pos and storing the results in the polygon's transformedVertexList.
+
+    if(coordinatesToTransform == TRANSFORM_LOCAL_TO_TRANS)
+    {
+        for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+        {
+            POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+            // transform this polygon if and only if it's not clipped, not culled,
+            // active, and visible, note however the concept of "backface" is 
+            // irrelevant in a wire frame engine though
+            if((currentPolygon == nullptr) ||
+              !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+               (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+               (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+            {
+                continue;
+            }
+
+            for(int vertex = 0; vertex < 3; vertex++)
+            {
+                // translate vertex
+                VECTOR4D_Add(&currentPolygon->vertexList[vertex], worldPosition, &currentPolygon->transformedVertexList[vertex]);
+            }
+        }
+    }
+    else // TRANSFORM_TRANS_ONLY
+    {
+        for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+        {
+            POLYGONF4DV1 *currentPolygon = renderList->polygonPointers[polygon];
+
+            // transform this polygon if and only if it's not clipped, not culled,
+            // active, and visible, note however the concept of "backface" is 
+            // irrelevant in a wire frame engine though
+            if((currentPolygon == nullptr) ||
+              !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+               (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+               (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+            {
+                continue;
+            }
+
+            for(int vertex = 0; vertex < 3; vertex++)
+            {
+                // translate the vertex
+                VECTOR4D_Add(&currentPolygon->transformedVertexList[vertex], worldPosition, &currentPolygon->transformedVertexList[vertex]);
+            }
+        }
+    }
+}
+
+void Convert_From_Homogenous4D_RENDERLIST4DV1(RENDERLIST4DV1* renderList)
+{
+    for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // transform this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concept of "backface" is 
+        // irrelevant in a wire frame engine though
+        if((currentPolygon == nullptr) ||
+          !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+            // convert to non-homogenous coords
+            VECTOR4D_DIV_BY_W(&currentPolygon->transformedVertexList[vertex]);
+        }
+    }
+}
+
+void World_To_Camera_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera)
+{
+    // you would use this function instead of the object based function
+    // if you decided earlier in the pipeline to turn each object into 
+    // a list of polygons and then add them to the global render list.
+    // The conversion of an object into polygons probably would have
+    // happened after object culling, local transforms, local to world
+    // and backface culling, so the minimum number of polygons from
+    // each object are in the list. Note that the function assumes
+    // that at LEAST the local to world transform has been called
+    // and the polygon data is in the transformed list POLYGONF4DV1::transformedVertexList[vertex].
+
+    for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // transform this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concept of "backface" is 
+        // irrelevant in a wire frame engine though
+        if((currentPolygon == nullptr) ||
+          !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+            // transform the vertex by the world to camera transform matrix.
+            POINT4D transformationResult;
+
+            // transform the specified vertex in currentPolygon->transformedVertexList[vertex]
+            Mat_Mul_VECTOR4D_4X4(&currentPolygon->transformedVertexList[vertex], &camera->worldToCameraTransform, &transformationResult);
+
+            // copy the result back into currentPolygon->transformedVertexList[vertex]
+            VECTOR4D_COPY(&currentPolygon->transformedVertexList[vertex], &transformationResult);
+        }
+    }
+}
+
+void Camera_To_Perspective_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera)
+{
+    // transform each polygon in the render list into camera coordinates
+    // assumes the render list has already been transformed to world
+    // coordinates and the result is in POLYGONF4DV1::transformedVertexList[vertex] of each polygon object
+
+    for(int polygon = 0; renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // transform this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concept of "backface" is 
+        // irrelevant in a wire frame engine though
+        if((currentPolygon == nullptr) ||
+          !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+            float x = currentPolygon->transformedVertexList[vertex].x;
+            float y = currentPolygon->transformedVertexList[vertex].y;
+            float z = currentPolygon->transformedVertexList[vertex].z;
+
+            currentPolygon->transformedVertexList[vertex].x = camera->viewDistance * x / z;
+            currentPolygon->transformedVertexList[vertex].y = camera->viewDistance * y * camera->aspectRatio / z;
+            // z = z, no change.
+
+            // not that we are NOT dividing by the homogenous w coordinate since
+            // we are not using a matrix operation for this version of the function 
+        }
+    }
+}
+
+void Camera_To_Perspective_Screen_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera)
+{
+    // transform each polygon in the render list to perspective screen 
+    // coordinates assumes the render list has already been transformed 
+    // to camera coordinates and the result is in POLYGON4DFV1::transformedVertexList[vertex]
+
+    for(int polygon = 0; renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // transform this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concept of "backface" is 
+        // irrelevant in a wire frame engine though
+        if((currentPolygon == nullptr) ||
+          !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        float alpha = (0.5f * camera->viewportWidth) - 0.5f;
+        float beta = (0.5f * camera->viewportHeight) - 0.5f;
+
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+            float x = currentPolygon->transformedVertexList[vertex].x;
+            float y = currentPolygon->transformedVertexList[vertex].y;
+            float z = currentPolygon->transformedVertexList[vertex].z;
+
+            // transform the vertex by the view parameters in the camera
+            currentPolygon->transformedVertexList[vertex].x = camera->viewDistance * x / z;
+            currentPolygon->transformedVertexList[vertex].y = camera->viewDistance * y / z;
+            // z = z, so no change
+
+            // note that we are NOT dividing by the homogenous w coordinate since
+            // we are not using a matrix operation for this version of the function
+
+            // now the coordinates are in the range x:(-viewport_width/2 to viewport_width/2)
+            // and y:(-viewport_height/2 to viewport_height/2), thus we need a translation and
+            // since the y-axis is inverted, we need to invert y to complete the screen 
+            // transform:
+            currentPolygon->transformedVertexList[vertex].x = currentPolygon->transformedVertexList[vertex].x + alpha;
+            currentPolygon->transformedVertexList[vertex].y = -currentPolygon->transformedVertexList[vertex].y + beta;
+        }
+    }
+}
+
+void Perspective_To_Screen_RENDERLIST4DV1(RENDERLIST4DV1* renderList, CAMERA4DV1* camera)
+{
+    // transform each polygon in the render list from perspective to screen 
+    // coordinates assumes the render list has already been transformed 
+    // to normalized perspective coordinates and the result is in POLYGONF4DV1::transformedVertexList
+    for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+    {
+        POLYGONF4DV1* currentPolygon = renderList->polygonPointers[polygon];
+
+        // transform this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concept of "backface" is 
+        // irrelevant in a wire frame engine though
+        if((currentPolygon == nullptr) ||
+          !(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+           (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        float alpha = (0.5f * camera->viewportWidth) - 0.5f;
+        float beta = (0.5f * camera->viewportHeight) - 0.5f;
+
+        for(int vertex = 0; vertex < 3; vertex++)
+        {
+            // the vertex is in perspective normalized coords from - 1 to 1
+            // on each axis, simple scale them and invert y axis and project
+            // to screen
+
+            // transform the vertex by the view parameters in the camera
+            currentPolygon->transformedVertexList[vertex].x = alpha + alpha * currentPolygon->transformedVertexList[vertex].x;
+            currentPolygon->transformedVertexList[vertex].y = beta - beta * currentPolygon->transformedVertexList[vertex].y;
+        }
+    }
+}
+
+void Reset_OBJECT4DV1(OBJECT4DV1* object)
+{
+// #define RESET_BIT(word,bit_flag) ((word)=((word) & (~bit_flag)))
+
+    // here's where you would add stuff to ready any object for the pipeline
+    object->state &= ~OBJECT4DV1_STATE_CULLED;
+
+    for(int polygon = 0; polygon < object->numPolygons; polygon++)
+    {
+        POLYGON4DV1* currentPolygon = &object->plist[polygon];
+
+        // is the polygon visible?
+        if(!(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE))
+        {
+            // nope!
+            continue;
+        }
+
+        // reset clipped and backface flags
+        currentPolygon->state &= ~POLYGON4DV1_STATE_CLIPPED;
+        currentPolygon->state &= ~POLYGON4DV1_STATE_BACKFACE;
+    }
+}
+
+int Insert_POLYGON4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGON4DV1* polygon)
+{
+    if(renderList->numPolygons >= RENDERLIST4DV1_MAX_POLYGONS)
+    {
+        return 0;
+    }
+
+    renderList->polygonPointers[renderList->numPolygons] = &renderList->polygonData[renderList->numPolygons];
+
+    renderList->polygonData[renderList->numPolygons].state = polygon->state;
+    renderList->polygonData[renderList->numPolygons].attributes = polygon->attributes;
+    renderList->polygonData[renderList->numPolygons].colour = polygon->colour;
+
+
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].transformedVertexList[0],
+        &polygon->vertexList[polygon->vertices[0]]);
+
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].transformedVertexList[1],
+        &polygon->vertexList[polygon->vertices[1]]);
+
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].transformedVertexList[2],
+        &polygon->vertexList[polygon->vertices[2]]);
+
+    // copy into local vertices too
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].vertexList[0],
+        &polygon->vertexList[polygon->vertices[0]]);
+
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].vertexList[1],
+        &polygon->vertexList[polygon->vertices[1]]);
+
+    VECTOR4D_COPY(&renderList->polygonData[renderList->numPolygons].vertexList[2],
+        &polygon->vertexList[polygon->vertices[2]]);
+
+    // now the polygon is loaded into the next free array position, but
+    // we need to fix up the links
+
+    if(renderList->numPolygons == 0)
+    {
+        renderList->polygonData[0].next = nullptr;
+        renderList->polygonData[0].previous = nullptr;
+    }
+    else
+    {
+        // set this node to point the the previous node and the next node (nullptr)
+        renderList->polygonData[renderList->numPolygons].next = nullptr;
+        renderList->polygonData[renderList->numPolygons].previous = &renderList->polygonData[renderList->numPolygons - 1];
+
+        // set the previous node to this node.
+        renderList->polygonData[renderList->numPolygons - 1].next = &renderList->polygonData[renderList->numPolygons];
+    }
+
+    renderList->numPolygons++;
+
+    return 1;
 }
