@@ -444,3 +444,12 @@ void Reset_OBJECT4DV1(OBJECT4DV1* object);
 
 // inserts the specified polygon into the specified RENDERLIST4DV1 instance.
 int Insert_POLYGON4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGON4DV1* polygon);
+
+// inserts the sent polyface POLYF4DV1 into the render list
+int Insert_POLYGONF4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGONF4DV1* polygon);
+
+// converts the entire object into a face list and then inserts the visible, active, non-clipped, 
+// non-culled polygons into the render list.
+// if insertLocal is true, the objects untransformed vertices are inserted otherwise the transformed vertices
+// are inserted.
+int Insert_OBJECT4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, OBJECT4DV1* object, bool insertLocal);

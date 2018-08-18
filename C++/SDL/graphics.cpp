@@ -1330,3 +1330,88 @@ int Insert_POLYGON4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGON4DV1* p
 
     return 1;
 }
+
+int Insert_POLYGONF4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGONF4DV1* polygon)
+{
+    if(renderList->numPolygons >= RENDERLIST4DV1_MAX_POLYGONS)
+    {
+        return 0;
+    }
+
+    // step 1: copy polygon into next opening in polygon render list
+    // point pointer to polygon structure
+    renderList->polygonPointers[renderList->numPolygons] = &renderList->polygonData[renderList->numPolygons];
+
+    // copy face right into array, thats it
+    memcpy((void*) &renderList->polygonData[renderList->numPolygons], (void*)polygon, sizeof(POLYGONF4DV1));
+
+    // now the polygon is loaded into the next free array position, but
+    // we need to fix up the links est if this is the first entry
+    if(renderList->numPolygons == 0)
+    {
+        renderList->polygonData[0].next = nullptr;
+        renderList->polygonData[0].previous = nullptr;
+    }
+    else
+    {
+        // first set this node to point to previous node and next node (null)
+        renderList->polygonData[renderList->numPolygons].next = nullptr;
+        renderList->polygonData[renderList->numPolygons].previous = &renderList->polygonData[renderList->numPolygons - 1];
+
+        // now set previous node to point to this node
+        renderList->polygonData[renderList->numPolygons - 1].next = &renderList->polygonData[renderList->numPolygons];
+    }
+
+    renderList->numPolygons++;
+}
+
+int Insert_OBJECT4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, OBJECT4DV1* object, int insertLocal)
+{
+    if(!(object->state * OBJECT4DV1_STATE_ACTIVE) ||
+        (object->state & OBJECT4DV1_STATE_CULLED) ||
+       !(object->state & OBJECT4DV1_STATE_VISIBLE))
+    {
+        return 0;
+    }
+
+    // the object is valid, let's rip it apart polygon by polygon
+    for(int polygon = 0; polygon < object->numPolygons; polygon++)
+    {
+        POLYGON4DV1* currentPolygon = &object->plist[polygon];
+
+        // is this polygon even visible?
+        if(!(currentPolygon->state & POLYGON4DV1_STATE_ACTIVE) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_CLIPPED) ||
+            (currentPolygon->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            // nope
+            continue;
+        }
+
+        // override vertex list polygon refers to
+        // the case that you want the local coords used
+        // first save old pointer
+        POINT4D* oldVertexList = currentPolygon->vertexList;
+
+        if(insertLocal)
+        {
+            currentPolygon->vertexList = object->vlistLocalVertices;
+        }
+        else
+        {
+            currentPolygon->vertexList = object->vlistTransformedVertices;
+        }
+
+        if(!Insert_POLYGON4DV1_RENDERLIST4DV1(renderList, currentPolygon))
+        {
+            // failed, the list contains the maximum number of polygons
+            currentPolygon->vertexList = oldVertexList;
+
+            return 0;
+        }
+
+        currentPolygon->vertexList = oldVertexList;
+    }
+
+    return 1;
+}
