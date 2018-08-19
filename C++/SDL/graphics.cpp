@@ -5,6 +5,8 @@
 extern float g_SineLookupTable[361];
 extern float g_CosineLookupTable[361];
 
+int debugPolygonsRenderedPerFrame = 0;
+
 int Graphics_ClipLine(int& x1, int& y1, int& x2, int& y2, int clipRegionX, int clipRegionY, int clipRegionX2, int clipRegionY2)
 {
     const int ClipCodeC = 0;
@@ -1363,6 +1365,8 @@ int Insert_POLYGONF4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGONF4DV1*
     }
 
     renderList->numPolygons++;
+
+    return 1;
 }
 
 int Insert_OBJECT4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, OBJECT4DV1* object, int insertLocal)
@@ -1414,4 +1418,381 @@ int Insert_OBJECT4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, OBJECT4DV1* obj
     }
 
     return 1;
+}
+
+
+void Draw_OBJECT4DV1_Wire(SDL_Surface *surface, OBJECT4DV1* object)
+{
+    for(int polygon = 0; polygon < object->numPolygons; polygon++)
+    {
+        // render this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concecpt of "backface" is 
+        // irrelevant in a wire frame engine though
+        if(!(object->plist[polygon].state & POLYGON4DV1_STATE_ACTIVE) ||
+            (object->plist[polygon].state & POLYGON4DV1_STATE_CLIPPED) ||
+            (object->plist[polygon].state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        // extract vertex indices into master list, rember the polygons are 
+        // NOT self contained, but based on the vertex list stored in the object
+        // itself
+        int vertexIndex0 = object->plist[polygon].vertices[0];
+        int vertexIndex1 = object->plist[polygon].vertices[1];
+        int vertexIndex2 = object->plist[polygon].vertices[2];
+
+
+        Graphics_DrawClippedLine(surface, 
+            object->vlistTransformedVertices[vertexIndex0].x, // from x
+            object->vlistTransformedVertices[vertexIndex0].y, // from y
+            object->vlistTransformedVertices[vertexIndex1].x, // to x
+            object->vlistTransformedVertices[vertexIndex1].y, // to y
+            object->plist[polygon].colour);
+
+        Graphics_DrawClippedLine(surface, 
+            object->vlistTransformedVertices[vertexIndex1].x, // from x
+            object->vlistTransformedVertices[vertexIndex1].y, // from y
+            object->vlistTransformedVertices[vertexIndex2].x, // to x
+            object->vlistTransformedVertices[vertexIndex2].y, // to y
+            object->plist[polygon].colour);
+
+        Graphics_DrawClippedLine(surface,
+            object->vlistTransformedVertices[vertexIndex2].x, // from x
+            object->vlistTransformedVertices[vertexIndex2].y, // from y
+            object->vlistTransformedVertices[vertexIndex0].x, // to x
+            object->vlistTransformedVertices[vertexIndex0].y, // to y
+            object->plist[polygon].colour);
+#ifdef _DEBUG
+        // rendering stats
+        debugPolygonsRenderedPerFrame++;
+#endif
+    }
+}
+
+void Draw_RENDERLIST4DV1_Wire(SDL_Surface* surface, RENDERLIST4DV1* renderList)
+{
+    for(int polygon = 0; polygon < renderList->numPolygons; polygon++)
+    {
+        // render this polygon if and only if it's not clipped, not culled,
+        // active, and visible, note however the concecpt of "backface" is 
+        // irrelevant in a wire frame engine though
+        if(!(renderList->polygonPointers[polygon]->state & POLYGON4DV1_STATE_ACTIVE) ||
+            (renderList->polygonPointers[polygon]->state & POLYGON4DV1_STATE_CLIPPED) ||
+            (renderList->polygonPointers[polygon]->state & POLYGON4DV1_STATE_BACKFACE))
+        {
+            continue;
+        }
+
+        Graphics_DrawClippedLine(surface, 
+            renderList->polygonPointers[polygon]->transformedVertexList[0].x, // from x
+            renderList->polygonPointers[polygon]->transformedVertexList[0].y, // from y
+            renderList->polygonPointers[polygon]->transformedVertexList[1].x, // to x
+            renderList->polygonPointers[polygon]->transformedVertexList[1].y, // to y
+            renderList->polygonPointers[polygon]->colour);
+
+        Graphics_DrawClippedLine(surface,
+            renderList->polygonPointers[polygon]->transformedVertexList[1].x, // from x
+            renderList->polygonPointers[polygon]->transformedVertexList[1].y, // from y
+            renderList->polygonPointers[polygon]->transformedVertexList[2].x, // to x
+            renderList->polygonPointers[polygon]->transformedVertexList[2].y, // to y
+            renderList->polygonPointers[polygon]->colour);
+
+        Graphics_DrawClippedLine(surface,
+            renderList->polygonPointers[polygon]->transformedVertexList[2].x, // from x
+            renderList->polygonPointers[polygon]->transformedVertexList[2].y, // from y
+            renderList->polygonPointers[polygon]->transformedVertexList[0].x, // to x
+            renderList->polygonPointers[polygon]->transformedVertexList[0].y, // to y
+            renderList->polygonPointers[polygon]->colour);
+    }
+
+#ifdef _DEBUG
+    debugPolygonsRenderedPerFrame++;
+#endif
+
+}
+
+void Build_CAMERA4DV1_Matrix_Euler(CAMERA4DV1* camera, int cameraRotationSequence)
+{
+    // we need to create a transformation matrix that looks like:
+    // Mcam = mt(-1) * my(-1) * mx(-1) * mz(-1)
+    // that is the inverse of the camera translation matrix mutilplied
+    // by the inverses of yxz, in that order. Note that the order of
+    // the rotation matrices is really up to you, so no particular order is enforced.
+    // The order of XYZ is based on the value specified in cameraRotationSequence,
+    // of cameraRotationSequence which can be any value CAMERA_ROTATE_SEQUENCE_XYZ where 
+    // XYZ can be in any order, YXZ, ZXY, etc.
+
+    MATRIX4X4 inversedCameraRotationMatrix;
+    MATRIX4X4 inversedCameraXAxisRotationMatrix;
+    MATRIX4X4 inversedCameraYAxisRotationMatrix;
+    MATRIX4X4 inversedCameraZAxisRotationMatrix;
+    MATRIX4X4 concatenatedInverseRotationMatrix;
+    MATRIX4X4 tempMatrix;
+
+    // step 1: create the inverse translation matrix for the camera position
+    Mat_Init_4X4(&inversedCameraRotationMatrix, 
+        1, 0, 0, 0, // m00, m01, m02, m03
+        0, 1, 0, 0, // m10, m11, m12, m13
+        0, 0, 1, 0, // m20, m21, m22, m23
+        -camera->position.x, -camera->position.y, -camera->position.z, 1 //  m30, m31, m32, m33
+        );
+
+    // extract out the euler angles
+    float thetaX = camera->direction.x;
+    float thetaY = camera->direction.y;
+    float thetaZ = camera->direction.z;
+
+    // step 2: create the inverse rotation sequence for the camera.
+    // Either the transpose of the normal rotation matrix or
+    // plugging negative values into each of the rotations will result
+    // in an inverse matrix.
+
+    // compute the sine and cosine of the X angle
+    float cosTheta = Fast_Cos(thetaX); // no change since cos(-x) = cos(x)
+    float sinTheta = -Fast_Sin(thetaX); // sin(-x) = -sin(x)
+
+    Mat_Init_4X4(&inversedCameraXAxisRotationMatrix,
+        1, 0, 0, 0,                   // m00, m01, m02, m03
+        0, cosTheta, sinTheta, 0,     // m10, m11, m12, m13
+        0, -sinTheta, cosTheta, 0,    // m20, m21, m22, m23
+        0, 0, 0, 1                    // m30, m31, m32, m33
+        );
+
+    cosTheta = Fast_Cos(thetaY); // no change since cos(-y) = cos(y)
+    sinTheta = Fast_Cos(thetaY); // sin(-y) = -sin(y) 
+
+    Mat_Init_4X4(&inversedCameraYAxisRotationMatrix, 
+        cosTheta, 0, -sinTheta, 0,     // m00, m01, m02, m03
+        0, 1, 0, 0,                    // m10, m11, m12, m13
+        sinTheta, 0, cosTheta, 0,      // m20, m21, m22, m23
+        0, 0, 0, 1                     // m30, m31, m32, m33
+        );
+
+    cosTheta = Fast_Cos(thetaZ);  // no change since cos(-z) = cos(z)
+    sinTheta = -Fast_Sin(thetaZ); // sin(-z) = -sin(z)
+
+    Mat_Init_4X4(&inversedCameraZAxisRotationMatrix, 
+        cosTheta, sinTheta, 0, 0,       // m00, m01, m02, m03
+        -sinTheta, cosTheta, 0, 0,      // m10, m11, m12, m13
+        0, 0, 1, 0,                     // m20, m21, m22, m23
+        0, 0, 0, 1                      // m30, m31, m32, m33
+        );  
+
+    // compute inverse camera rotation sequence
+    switch(cameraRotationSequence)
+    {
+        case CAMERA_ROTATE_SEQUENCE_XYZ:
+            Mat_Mul_4X4(&inversedCameraXAxisRotationMatrix, &inversedCameraYAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraZAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+            break;
+
+        case CAMERA_ROTATE_SEQUENCE_YXZ:
+        {
+            Mat_Mul_4X4(&inversedCameraYAxisRotationMatrix, &inversedCameraXAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraZAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+        } break;
+
+        case CAMERA_ROTATE_SEQUENCE_XZY:
+        {
+            Mat_Mul_4X4(&inversedCameraXAxisRotationMatrix, &inversedCameraZAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraYAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+        } break;
+
+        case CAMERA_ROTATE_SEQUENCE_YZX:
+        {
+            Mat_Mul_4X4(&inversedCameraYAxisRotationMatrix, &inversedCameraZAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraXAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+        } break;
+
+        case CAMERA_ROTATE_SEQUENCE_ZYX:
+        {
+            Mat_Mul_4X4(&inversedCameraZAxisRotationMatrix, &inversedCameraYAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraXAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+        } break;
+
+        case CAMERA_ROTATE_SEQUENCE_ZXY:
+        {
+            Mat_Mul_4X4(&inversedCameraZAxisRotationMatrix, &inversedCameraXAxisRotationMatrix, &tempMatrix);
+            Mat_Mul_4X4(&tempMatrix, &inversedCameraYAxisRotationMatrix, &concatenatedInverseRotationMatrix);
+
+        } break;
+        default:
+            break;
+    }
+
+    // now concatenatedInverseRotationMatrix holds the concatenated product of inverse rotation matrices
+    // multiply the inverse translation matrix against it and store in the 
+    // camera objects' camera transform matrix we are done!
+    Mat_Mul_4X4(&inversedCameraRotationMatrix, &concatenatedInverseRotationMatrix, &camera->worldToCameraTransform);
+}
+
+void Build_CAMERA4DV1_Matrix_UVN(CAMERA4DV1* camera, int mode)
+{
+    MATRIX4X4 inverseCameraTranslationMatrix;
+    MATRIX4X4 finalUVNMatrix;
+
+    // step 1: create the inverse translation matrix for the camera position
+    Mat_Init_4X4(&inverseCameraTranslationMatrix, 
+        1, 0, 0, 0,   // m00, m01, m02, m03
+        0, 1, 0, 0,   // m10, m11, m12, m13
+        0, 0, 1, 0,   // m20, m21, m22, m23
+        -camera->position.x, -camera->position.y, -camera->position.z, 1); // m30, m31, m32, m33
+
+    // step 2: determine how the target point will be computed
+    if(mode == UVN_MODE_SPHERICAL)
+    {
+        // use spherical construction; target needs to be recomputed
+
+        float phi = camera->direction.x; // elevation
+        float theta = camera->direction.y; // heading
+
+        float sinPhi = Fast_Sin(phi);
+        float cosPhi = Fast_Cos(phi);
+
+        float sinTheta = Fast_Sin(theta);
+        float cosTheta = Fast_Cos(theta);
+
+        // now compute the target point on a unit sphere x,y,z
+        camera->target.x = -1 * sinPhi * sinTheta;
+        camera->target.y = 1 * cosPhi;
+        camera->target.z = 1 * sinPhi * cosTheta;
+    }
+
+    // at this point, we have the view reference point, the target and that's
+    // all we need to recompute u,v,n
+
+    // Step 1: n = <target position - view reference point>
+    VECTOR4D_Build(&camera->position, &camera->target, &camera->n);
+
+    // Step 2: Let v = <0,1,0>
+    VECTOR4D_INITXYZ(&camera->v, 0, 1, 0);
+
+    // Step 3: u = (v x n)
+    VECTOR4D_Cross(&camera->v, &camera->n, &camera->u);
+
+    // Step 4: v = (n x u)
+    VECTOR4D_Cross(&camera->n, &camera->u, &camera->v);
+
+    // Step 5: normalize all vectors
+    VECTOR4D_Normalize(&camera->u);
+    VECTOR4D_Normalize(&camera->v);
+    VECTOR4D_Normalize(&camera->n);
+
+    // build the UVN matrix by placing u,v,n as the columns of the matrix
+    Mat_Init_4X4(&finalUVNMatrix, 
+        camera->u.x, camera->v.x, camera->n.x, 0,  // m00, m01, m02, m03
+        camera->u.y, camera->v.y, camera->n.y, 0,  // m10, m11, m12, m13
+        camera->u.z, camera->v.z, camera->n.z, 0,  // m20, m21, m22, m23
+        0, 0, 0, 1); // m30, m31, m32, 33
+
+    // now multiply the translation matrix and the uvn matrix and store in the 
+    // final camera matrix CAMERA4DV1::worldToCameraTransform
+    Mat_Mul_4X4(&inverseCameraTranslationMatrix, &finalUVNMatrix, &camera->worldToCameraTransform);
+}
+
+void Init_CAMERA4DV1(CAMERA4DV1* camera, int cameraAttributes, POINT4D* cameraPosition, VECTOR4D* cameraDirection,
+    POINT4D* cameraTarget, float nearZClippingPlane, float farZClippingPlane, float fieldOfViewInDegrees,
+    float viewportWidth, float viewportHeight)
+{
+    camera->attributes = cameraAttributes;
+
+    VECTOR4D_COPY(&camera->position, cameraPosition);
+    VECTOR4D_COPY(&camera->direction, cameraDirection);
+
+    VECTOR4D_INITXYZ(&camera->u, 1, 0, 0);
+    VECTOR4D_INITXYZ(&camera->v, 0, 1, 0);
+    VECTOR4D_INITXYZ(&camera->n, 0, 0, 1);
+
+    if(cameraTarget != nullptr)
+    {
+        VECTOR4D_COPY(&camera->target, cameraTarget);
+    }
+    else
+    {
+        VECTOR4D_ZERO(&camera->target);
+    }
+
+    camera->nearZClippingPlane = nearZClippingPlane;
+    camera->farZClippingPlane = farZClippingPlane;
+    camera->viewportWidth = viewportWidth;
+    camera->viewportHeight = viewportHeight;
+    camera->viewportCenterX = (viewportWidth - 1) / 2;
+    camera->viewportCenterY = (viewportHeight - 1) / 2;
+    camera->aspectRatio = (float) viewportWidth / (float) viewportHeight;
+
+    MAT_IDENTITY_4X4(&camera->worldToCameraTransform);
+    MAT_IDENTITY_4X4(&camera->cameraToPerspectiveTransform);
+    MAT_IDENTITY_4X4(&camera->perspectiveToScreenTransform);
+
+    camera->fieldOfView = fieldOfViewInDegrees;
+
+    // set the viewplane dimensions up, they will be 2 x (2/ar)
+    camera->viewPlaneWidth = 2.0;
+    camera->viewPlaneHeight = 2.0 / camera->aspectRatio;
+
+    // now we know fov and we know the viewplane dimensions plug into formula and
+    // solve for view distance parameters
+    float tangentFieldOfView = tan(DEG_TO_RAD(fieldOfViewInDegrees / 2));
+
+    camera->viewDistance = (0.5f) * camera->viewPlaneWidth * tangentFieldOfView;
+
+    if(fieldOfViewInDegrees == 90.0f)
+    {
+        // set up the clipping planes -- easy for 90 degrees!
+
+        POINT3D originPoint;
+        VECTOR3D_INITXYZ(&originPoint, 0, 0, 0);
+
+        VECTOR3D planeNormal;
+
+        // right clipping plane
+        VECTOR3D_INITXYZ(&planeNormal, 1, 0, -1); // x = z
+        PLANE3D_Init(&camera->rightClippingPlane, &originPoint, &planeNormal, 1);
+
+        // left clipping plane
+        VECTOR3D_INITXYZ(&planeNormal, -1, 0, -1); // -x = z
+        PLANE3D_Init(&camera->leftClippingPlane, &originPoint, &planeNormal, 1);
+
+        // top clipping plane
+        VECTOR3D_INITXYZ(&planeNormal, 0, 1, -1); // y = z
+        PLANE3D_Init(&camera->topClippingPlane, &originPoint, &planeNormal, 1);
+
+        // bottom clipping plane
+        VECTOR3D_INITXYZ(&planeNormal, 0, -1, -1); // -y = z plane
+        PLANE3D_Init(&camera->bottomClippingPlane, &originPoint, &planeNormal, 1);
+    }
+    else
+    {
+        // now compute clipping planes
+
+        POINT3D originPoint;
+        VECTOR3D_INITXYZ(&originPoint, 0, 0, 0);
+
+        VECTOR3D  planeNormal;
+
+        // since we don't have a 90 degree field of view, computing the normals
+        // are a bit tricky; there are a number of geometric constructions
+        // that solve the problem, but I'm going to solve for the
+        // vectors that represent the 2D projections of the frustrum planes
+        // on the x-z and y-z planes and then find perpendiculars to them
+
+        // right clipping plane
+        VECTOR3D_INITXYZ(&planeNormal, camera->viewDistance, 0, -camera->viewPlaneWidth / 2.0f);
+        PLANE3D_Init(&camera->rightClippingPlane, &originPoint, &planeNormal, 1);
+
+        // left clipping plane, we can simply reflect the right normal about
+        // the z axis since the planes are symetric about the z axis
+        // thus invert x only
+        VECTOR3D_INITXYZ(&planeNormal, -camera->viewDistance, 0, -camera->viewPlaneWidth / 2.0f);
+        PLANE3D_Init(&camera->leftClippingPlane, &originPoint, &planeNormal, 1);
+
+        // top clipping plane, same construction
+        VECTOR3D_INITXYZ(&planeNormal, 0, camera->viewDistance, -camera->viewPlaneWidth / 2.0);
+        PLANE3D_Init(&camera->topClippingPlane, &originPoint, &planeNormal, 1);
+
+        // bottom clipping plane, same inversion
+        VECTOR3D_INITXYZ(&planeNormal, 0, -camera->viewDistance, -camera->viewPlaneWidth / 2.0);
+        PLANE3D_Init(&camera->bottomClippingPlane, &originPoint, &planeNormal, 1);
+    }
 }

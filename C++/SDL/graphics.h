@@ -453,3 +453,31 @@ int Insert_POLYGONF4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, POLYGONF4DV1*
 // if insertLocal is true, the objects untransformed vertices are inserted otherwise the transformed vertices
 // are inserted.
 int Insert_OBJECT4DV1_RENDERLIST4DV1(RENDERLIST4DV1* renderList, OBJECT4DV1* object, bool insertLocal);
+
+// renders a wireframe version of the object to the specified surface.
+// This function doesn't perform or give a shit about hidden surface removal; wireframe rendering ONLY.
+// It's assumed you're using screen coordiates. 2D line clipping is performed so lines aren't drawn 
+// past the dimensions of the specified surface.
+void Draw_OBJECT4DV1_Wire(SDL_Surface *surface, OBJECT4DV1* object);
+
+// renders all the faces in the specified renderList as wireframes.
+// Like Draw_OBJECT4DV1_Wire, this function assumes screen coordinates are being used. 2D line clipping
+// is performed on each line so no lines are drawn past the dimentions of the specified surface.
+void Draw_RENDERLIST4DV1_Wire(SDL_Surface* surface, RENDERLIST4DV1* renderList);
+
+// creates a camera matrix based on Euler angles and stores it in the sent camera object
+void Build_CAMERA4DV1_Matrix_Euler(CAMERA4DV1* camera, int cameraRotationSequence);
+
+// creates a camera matrix based on a look at vector n, look up vector v, and a look right (or left) u
+// and stores it in the sent camera object.
+// all values are extracted out of the camera object itself. mode selects how uvn is computed
+// UVN_MODE_SIMPLE - low level simple model, use the target and view reference point
+// UVN_MODE_SPHERICAL - spherical mode, the x,y components will be used as the
+// elevation and heading of the view vector respectively 
+// along with the view reference point as the position as usual.
+void Build_CAMERA4DV1_Matrix_UVN(CAMERA4DV1* camera, int mode);
+
+// initializes the camera object cam
+void Init_CAMERA4DV1(CAMERA4DV1* camera, int cameraAttributes, POINT4D* cameraPosition, VECTOR4D* cameraDirection,
+POINT4D* cameraTarget, float nearZClippingPlane, float farZClippingPlane, float fieldOfViewInDegrees,
+float viewportWidth, float viewportHeight);

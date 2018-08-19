@@ -25,6 +25,9 @@
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b)) 
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b)) 
 
+#define DEG_TO_RAD(ang) ((ang) * M_PI / 180.0)
+#define RAD_TO_DEG(rads) ((rads) * 180.0 / M_PI)
+
 // 2x2 matrix
 struct MATRIX2X2
 {
