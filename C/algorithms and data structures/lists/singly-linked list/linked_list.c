@@ -8,6 +8,7 @@ void linked_list_init(linked_list_t *list, void(*destroy)(void *data))
 	list->head = list->tail = NULL;
 }
 
+
 int linked_list_add_first(linked_list_t *list, const void *data)
 {
 	list_element_t *new_element = malloc(sizeof(list_element_t));
@@ -81,6 +82,52 @@ int linked_list_remove_first(linked_list_t *list, void **data)
 	if(1 == list->size)
 	{
 		list->tail = NULL;
+		list->head = NULL;
+	}
+
+	free(old_element);
+	list->size--;
+
+	return 0;
+}
+
+int linked_list_remove_last(linked_list_t *list, void **data)
+{
+	list_element_t *old_element;
+
+	if(0 == list->size)
+	{
+		return -1;
+	}
+
+	if(NULL != data)
+	{
+		*data = list->tail->data;
+	}
+
+	old_element = list->tail;
+	list->tail = NULL;
+
+	if(1 == list->size)
+	{
+		list->head = NULL;
+	}
+	else
+	{
+		list_element_t *element = list->head;
+		while(element->next != NULL)
+		{
+			if(!element->next->next)
+			{
+				list->tail = element;
+				list->tail->next = NULL;
+			}
+			else
+			{
+				element = element->next;
+			}
+		}
+		
 	}
 
 	free(old_element);
