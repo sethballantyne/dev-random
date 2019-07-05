@@ -167,7 +167,7 @@ bool dlinked_list_contains(dlinked_list_t *list, bool(*compare)(void *))
 		dlist_element_t *element = list->head;
 		for(int i = 0; i < list->size; i++)
 		{
-			if(true == compare(element))
+			if(true == compare(element->data))
 			{
 				return true;
 			}
