@@ -1,4 +1,6 @@
-Paint+ is a simple network-based paint program I wrote to play around with SDL and SDL_net. The application will behave as a server or client depending on the command line arguments passed to it, and anything painted in the client will appear in the server in real-time and vice versa.
+Paint+ is a simple network-based paint program I wrote to play around with SDL and SDL_net. The application will behave as a server
+or client depending on the command line arguments passed to it, and anything painted in the client will appear in the server in
+real-time and vice versa.
 
 To start an instance of the server:
 Paint+ <port>, where port is the port it should listen on.
