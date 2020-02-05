@@ -27,6 +27,10 @@ void FileSystem::GetFiles(wstring path, vector<wstring>& directories, vector<wst
 			wstring dirName(findData.cFileName);
 			if(dirName != L"." && dirName != L"..")
 			{
+				if(path.back() != '\\')
+				{
+					path += L"\\";
+				}
 				//wcout << "DIR: " << wstring(findData.cFileName) << endl;
 				directories.push_back(path + wstring(findData.cFileName) + L"\\");
 			}
