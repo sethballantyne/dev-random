@@ -1,38 +1,56 @@
 #include <queue>
+#include <set>
 #include <Windows.h>
+#include <iostream>
 #include "FileSystem.h"
 using namespace std;
 
-void FileSystem::GetFiles(wstring path, vector<wstring>& directories, vector<wstring>& files)
+int FileSystem::GetFiles(wstring path, vector<wstring>& directories, vector<wstring>& files)
 {
-	if(path.length() > MAX_PATH - 3)
+	set<wchar_t> dirSeperators = { '\\', '//' };
+	bool endsWithDirSeperator = false;
+
+	// path doesn't end with a directory seperator and there's no room to append one 
+	// along with the * to specify we want everything in the directory.
+	if(dirSeperators.find(path.back()) == dirSeperators.end())
 	{
-		throw exception();
+		if(path.length() > MAX_PATH - 3)
+		{
+			return FS_ERROR_PATH_TOO_LONG;
+		}
+	}
+	else
+	{
+		endsWithDirSeperator = true;
 	}
 
 	WIN32_FIND_DATA findData;
-	wstring temp = path + L"\\*";
-	HANDLE hFind = FindFirstFile(temp.c_str(), &findData);
+
+	if(!endsWithDirSeperator)
+	{
+		path += L"\\";
+	}
+
+	HANDLE hFind = FindFirstFile((wstring(path) + L"*").c_str(), &findData);
 	if(INVALID_HANDLE_VALUE == hFind)
 	{
-		//MessageBox(NULL, temp.c_str(), L"HELLO!", MB_OK|MB_ICONEXCLAMATION);
-		//wcout << temp.c_str() << endl;
-		// error DisplayErrorBox(TEXT("FINDFIRSTFILE"))
+		return FS_ERROR_INVALID_PATH;
 	}
 
 	do
 	{
 		if(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
+			
 			wstring dirName(findData.cFileName);
-			if(dirName != L"." && dirName != L"..")
+
+			// ignore these fuckers, with .., we'll end up processing the entire filesystem.
+			// (which was a fun bug to discover)
+			if(dirName != L"." && dirName != L"..")                
 			{
-				if(path.back() != '\\')
-				{
-					path += L"\\";
-				}
 				//wcout << "DIR: " << wstring(findData.cFileName) << endl;
-				directories.push_back(path + wstring(findData.cFileName) + L"\\");
+				wstring finalPath = path + wstring(findData.cFileName);
+				directories.push_back(finalPath);
 			}
 		}
 		else
@@ -45,15 +63,15 @@ void FileSystem::GetFiles(wstring path, vector<wstring>& directories, vector<wst
 
 	if(error != ERROR_NO_MORE_FILES)
 	{
-		throw exception();
-
-		// error DisplayErrorBox(TEXT("FindFirstFile"))
+		return FS_ERROR_GENERAL_B0RK;
 	}
 
 	FindClose(hFind);
+
+	return 0;
 }
 
-vector<wstring> FileSystem::GetFiles(std::wstring path)
+int FileSystem::GetFiles(std::wstring path, vector<wstring>& destVector)
 {
 	queue<wstring> pathQueue;
 	pathQueue.push(path);
@@ -63,7 +81,12 @@ vector<wstring> FileSystem::GetFiles(std::wstring path)
 
 	while(!pathQueue.empty())
 	{
-		GetFiles(pathQueue.front(), directories, files);
+		
+		int retval = GetFiles(pathQueue.front(), directories, files);
+		if(retval != 0)
+		{
+			return retval;
+		}
 
 		for(auto dir : directories)
 		{
@@ -74,5 +97,6 @@ vector<wstring> FileSystem::GetFiles(std::wstring path)
 		pathQueue.pop();
 	}
 
-	return files;
+	destVector = files;
+	return 0;
 }

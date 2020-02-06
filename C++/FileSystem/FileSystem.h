@@ -2,11 +2,18 @@
 #include <vector>
 #include <string>
 
+#define FS_ERROR_PATH_TOO_LONG 1
+#define FS_ERROR_INVALID_PATH  2
+#define FS_ERROR_GENERAL_B0RK  3
+
 class FileSystem
 {
 private:
-	void GetFiles(std::wstring path, std::vector<std::wstring>& directories, std::vector<std::wstring>& files);
+	int GetFiles(std::wstring path, std::vector<std::wstring>& directories, std::vector<std::wstring>& files);
 public:
 	FileSystem() = default;
-	std::vector<std::wstring> GetFiles(std::wstring path);
+
+	// Gets all the files within the specified path -- including subdirectories -- and stores the absolute path
+	// of each file (including filenames) in 'files'.
+	int GetFiles(std::wstring path, std::vector<std::wstring>& files);
 };
