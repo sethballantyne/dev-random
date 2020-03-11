@@ -256,7 +256,7 @@ inline void MAT_TRANSPOSE_4X4(MATRIX4X4* m)
     mt.matrix[2][3] = m->matrix[3][2];
     mt.matrix[3][0] = m->matrix[0][3]; 
     mt.matrix[3][1] = m->matrix[1][3]; 
-    mt.matrix[3][2] = m->matrix[2][2]; 
+    mt.matrix[3][2] = m->matrix[2][3]; 
     mt.matrix[3][3] = m->matrix[3][3];
 
     memcpy((void *)m, (void *)&mt, sizeof(MATRIX4X4));
@@ -291,7 +291,7 @@ inline void MAT_TRANSPOSE_4X4(MATRIX4X4* m, MATRIX4X4* mt)
     mt->matrix[2][3] = m->matrix[3][2];
     mt->matrix[3][0] = m->matrix[0][3]; 
     mt->matrix[3][1] = m->matrix[1][3]; 
-    mt->matrix[3][2] = m->matrix[2][2]; 
+    mt->matrix[3][2] = m->matrix[2][3]; 
     mt->matrix[3][3] = m->matrix[3][3];
 }
 
