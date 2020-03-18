@@ -12,6 +12,11 @@ private:
 	int GetFiles(std::wstring path, std::vector<std::wstring>& directories, std::vector<std::wstring>& files);
 public:
 	FileSystem() = default;
+	~FileSystem() = default;
+
+	// don't need these fuckers (yet)
+	FileSystem(const FileSystem&) = delete;			
+	FileSystem& operator=(const FileSystem&) = delete;
 
 	// Gets all the files within the specified path -- including subdirectories -- and stores the absolute path
 	// of each file (including filenames) in 'files'.
