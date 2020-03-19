@@ -9,16 +9,18 @@
 class FileSystem
 {
 private:
-	int GetFiles(std::wstring path, std::vector<std::wstring>& directories, std::vector<std::wstring>& files);
+	static int GetFiles(std::wstring path, std::vector<std::wstring>& directories, std::vector<std::wstring>& files);
 public:
 	FileSystem() = default;
 	~FileSystem() = default;
 
 	// don't need these fuckers (yet)
-	FileSystem(const FileSystem&) = delete;			
-	FileSystem& operator=(const FileSystem&) = delete;
+	FileSystem(const FileSystem&) = delete;					// copy ctor
+	FileSystem(const FileSystem&&) = delete;                // move ctor
+	FileSystem& operator=(const FileSystem&) = delete;      // copy assignment operator
+	FileSystem& operator=(const FileSystem&&) = delete;     // move assignment operator
 
 	// Gets all the files within the specified path -- including subdirectories -- and stores the absolute path
 	// of each file (including filenames) in 'files'.
-	int GetFiles(std::wstring path, std::vector<std::wstring>& files);
+	static int GetFiles(std::wstring path, std::vector<std::wstring>& files);
 };
